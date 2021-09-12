@@ -2,7 +2,6 @@ const express = require("express");
 const router = new express.Router();
 const ExpressError = require("../expressError");
 const User = require("../models/user");
-const { authenticateJWT } = require("../middleware/auth");
 const jwt = require("jsonwebtoken");
 const { SECRET_KEY } = require("../config");
 
@@ -16,7 +15,7 @@ router.post("/login", async (req, res, next) => {
   try {
     const { username, password } = req.body;
     // authenticate user
-    const user = User.authenticate(username, password);
+    const user = await User.authenticate(username, password);
     // if user is authenticated, create token and return
     if (user) {
       const token = jwt.sign({ username }, SECRET_KEY);
@@ -49,8 +48,8 @@ router.post("/register", async (req, res, next) => {
       phone
     );
     if (registeredUser) {
-      const token = jwt.sign({ username }, token);
-      User.updateLoginTimestamp(username);
+      const token = jwt.sign({ username }, SECRET_KEY);
+      await User.updateLoginTimestamp(username);
       return res.json({ token });
     } else {
       throw new ExpressError("Something went wrong", 400);
